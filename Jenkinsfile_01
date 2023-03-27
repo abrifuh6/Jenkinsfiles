@@ -1,0 +1,44 @@
+node{
+    def mavenHome = tool name: 'maven3.9.1'
+    stage('1CloneCode'){
+        git "https://github.com/abrifuh6/maven-web-application"
+        // sh "git clone "https://github.com/abrifuh6/maven-web-application""
+    }
+    
+    stage('2Test&Build'){
+        sh "${mavenHome}/bin/mvn clean package"
+    }
+
+    stage('3CodeQuality'){
+        sh "${mavenHome}/bin/mvn sonar:sonar"
+    }
+
+    stage('4UploadArtifacts'){
+        sh "${mavenHome}/bin/mvn deploy"
+    }
+
+    stage('5DeploytoUAT'){
+        echo "deploy to UAT"
+        // generate using pipeline syntax in jenkins UI
+        deploy adapters: [tomcat9(credentialsId: 'tomcat-cred', path: '', url: 'http://44.211.46.165:8080/')], contextPath: null, war: 'target/*war'
+    }
+    stage('6ApprovalGate'){
+        // Use the "time-out" parameter and input message
+        sh "echo 'ready for review'"
+        timeout(time:5, unit: 'DAYS'){
+        input message: 'Application ready for deployment, Please review and approve'
+      }
+    }
+    stage('7Deploy2Prod'){
+        deploy adapters: [tomcat9(credentialsId: 'tomcat-cred', path: '', url: 'http://44.211.46.165:8080/')], contextPath: null, war: 'target/*war'
+
+    }
+    stage('8EmailNotification'){
+        // Using pipeline syntax, one can generate email notifications for the parties involved.
+        emailext body: '''Hi All,
+
+Check build status for latest builds.
+
+Buamtech Consulting inc.''', recipientProviders: [buildUser()], subject: 'build and deployment status', to: 'abridevops@gmail.com'
+    }
+}

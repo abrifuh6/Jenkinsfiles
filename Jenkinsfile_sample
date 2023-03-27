@@ -1,0 +1,11 @@
+node{
+    stage('1CloneCode'){}
+    stage('2Test&Build'){}
+    stage('3CodeQuality'){}
+    stage('4UploadArtifacts'){}
+    stage('5DeploytoUAT'){}
+    stage('6ApprovalGate'){}
+    stage('7Deploy2Prod'){}
+    stage('8EmailNotification'){}
+    // ignore errors
+}
